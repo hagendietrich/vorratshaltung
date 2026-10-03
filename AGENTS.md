@@ -69,7 +69,7 @@ Die App soll folgende Dinge ermöglichen:
 
 ## Umsetzungsfahrplan
 
-- [ ] **Phase 1: Projekt-Setup & Datenbankschicht**
+- [x] **Phase 1: Projekt-Setup & Datenbankschicht**
   - Room DB, Navigation Compose und KotlinX Dependencies hinzufügen.
   - Entity-Klassen, TypeConverter (LocalDate) und DAOs aufsetzen.
   - Repository-Schnittstellen und Test-Daten.

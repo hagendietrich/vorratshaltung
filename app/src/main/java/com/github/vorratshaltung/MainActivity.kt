@@ -1,47 +1,42 @@
 package com.github.vorratshaltung
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.activity.viewModels
+import com.github.vorratshaltung.data.local.VorratshaltungDatabase
+import com.github.vorratshaltung.data.repository.InventoryRepository
+import com.github.vorratshaltung.ui.shelf.ShelfScreen
+import com.github.vorratshaltung.ui.shelf.ShelfViewModel
+import com.github.vorratshaltung.ui.shelf.ShelfViewModelFactory
 import com.github.vorratshaltung.ui.theme.VorratshaltungTheme
 
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: ShelfViewModel by viewModels {
+        val db = VorratshaltungDatabase.getDatabase(applicationContext)
+        val repo = InventoryRepository(
+            storageLocationDao = db.storageLocationDao(),
+            productDao = db.productDao(),
+            inventoryItemDao = db.inventoryItemDao()
+        )
+        ShelfViewModelFactory(repo)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             VorratshaltungTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                ShelfScreen(
+                    viewModel = viewModel,
+                    onCompartmentClick = { compartmentId ->
+                        Toast.makeText(this, "Fach ID $compartmentId geklickt (Phase 3)", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    VorratshaltungTheme {
-        Greeting("Android")
     }
 }
