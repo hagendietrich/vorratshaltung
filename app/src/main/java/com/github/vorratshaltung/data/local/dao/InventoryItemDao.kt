@@ -12,6 +12,9 @@ import java.time.LocalDate
 
 @Dao
 interface InventoryItemDao {
+    @Query("SELECT * FROM inventory_items")
+    fun getAllInventoryItems(): Flow<List<InventoryItemEntity>>
+
     @Query("SELECT * FROM inventory_items WHERE compartmentId = :compartmentId")
     fun getItemsForCompartment(compartmentId: Long): Flow<List<InventoryItemEntity>>
 

@@ -18,6 +18,9 @@ interface StorageLocationDao {
     @Query("SELECT * FROM storage_locations WHERE id = :id")
     fun getStorageLocationById(id: Long): Flow<StorageLocationEntity?>
 
+    @Query("SELECT * FROM compartments WHERE id = :id")
+    fun getCompartmentById(id: Long): Flow<CompartmentEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStorageLocation(storageLocation: StorageLocationEntity): Long
 

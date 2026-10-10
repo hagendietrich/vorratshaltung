@@ -28,7 +28,7 @@ import java.time.LocalDate
         ProductEntity::class,
         InventoryItemEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

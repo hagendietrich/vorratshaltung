@@ -19,6 +19,8 @@ class InventoryRepository(
 
     fun getStorageLocation(id: Long): Flow<StorageLocationEntity?> = storageLocationDao.getStorageLocationById(id)
 
+    fun getCompartmentById(id: Long): Flow<CompartmentEntity?> = storageLocationDao.getCompartmentById(id)
+
     fun getCompartmentsForStorage(storageLocationId: Long): Flow<List<CompartmentEntity>> =
         storageLocationDao.getCompartmentsForStorage(storageLocationId)
 
@@ -38,6 +40,8 @@ class InventoryRepository(
     suspend fun updateProduct(product: ProductEntity) = productDao.updateProduct(product)
 
     suspend fun deleteProduct(product: ProductEntity) = productDao.deleteProduct(product)
+
+    val allInventoryItems: Flow<List<InventoryItemEntity>> = inventoryItemDao.getAllInventoryItems()
 
     fun getItemsForCompartment(compartmentId: Long): Flow<List<InventoryItemEntity>> =
         inventoryItemDao.getItemsForCompartment(compartmentId)

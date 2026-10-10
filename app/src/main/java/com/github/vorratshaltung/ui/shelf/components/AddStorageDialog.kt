@@ -20,6 +20,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.github.vorratshaltung.data.model.StorageType
@@ -45,6 +47,10 @@ fun AddStorageDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Bezeichnung (z.B. Vorratskammer)") },
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Done
+                    ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )

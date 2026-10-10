@@ -15,5 +15,6 @@ data class ProductEntity(
     val calories: Int? = null,
     val protein: Float? = null,
     val carbohydrates: Float? = null,
-    val fat: Float? = null
+    val fat: Float? = null,
+    val imageUrl: String? = null
 )

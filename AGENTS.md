@@ -74,12 +74,12 @@ Die App soll folgende Dinge ermöglichen:
   - Entity-Klassen, TypeConverter (LocalDate) und DAOs aufsetzen.
   - Repository-Schnittstellen und Test-Daten.
 
-- [ ] **Phase 2: Räumliche Regalansicht (Spatial Grid View)**
+- [x] **Phase 2: Räumliche Regalansicht (Spatial Grid View)**
   - UI-Komponente für m × n Raster (Regalfächer) in Compose.
   - Lagerort-Auswahl (Dropdown/Tabs).
   - Status-Anzeige pro Fach (Anzahl Produkte, MHD-Warnung).
 
-- [ ] **Phase 3: Fach-Listenansicht & Schnell-Aktionen**
+- [x] **Phase 3: Fach-Listenansicht & Schnell-Aktionen**
   - Klick auf Regalfach navigiert zur Fach-Inhaltsliste.
   - `+` / `-` Klicks zur direkten Mengenanpassung.
   - Langer Klick öffnet Soll-Anpassung / Editiermodus.
