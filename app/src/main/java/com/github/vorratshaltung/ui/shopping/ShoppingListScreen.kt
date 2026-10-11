@@ -109,7 +109,7 @@ fun ShoppingListScreen(
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "Vorhanden: ${item.currentQuantity} Stk (${item.product.unit.formatAmount(item.currentTotalAmount)}) | Soll: ${item.product.targetQuantity} Einheiten",
+                                    text = "Vorhanden: ${item.currentQuantity} Stk (${item.product.unit.formatAmount(item.currentTotalAmount)}) | Soll: ${item.product.targetQuantity} Stk",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

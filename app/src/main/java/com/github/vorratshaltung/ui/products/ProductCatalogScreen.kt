@@ -192,12 +192,12 @@ fun ProductCatalogScreen(
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Text(
-                                            text = "Vorhanden: ${item.availableQuantity} Stk (${product.unit.formatAmount(item.totalAvailableAmount)}) | Soll: ${product.targetQuantity} Einheiten",
+                                            text = "Vorhanden: ${item.availableQuantity} Stk (${product.unit.formatAmount(item.totalAvailableAmount)}) | Soll: ${product.targetQuantity} Stk",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         Text(
-                                            text = "Menge pro Einheit: ${product.unit.formatAmount(product.unitAmount)}",
+                                            text = "Einheiten pro Packung: ${product.unit.formatAmount(product.unitAmount)}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.outline
                                         )
@@ -393,7 +393,7 @@ fun ProductEditDialog(
                 OutlinedTextField(
                     value = unitAmountText,
                     onValueChange = { unitAmountText = it },
-                    label = { Text("Menge pro Einheit (z.B. 1 für 1l, 1000 für 1000g)") },
+                    label = { Text("Einheiten pro Packung") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()

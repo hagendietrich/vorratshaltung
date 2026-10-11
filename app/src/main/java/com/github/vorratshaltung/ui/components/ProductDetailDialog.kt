@@ -53,7 +53,7 @@ fun ProductDetailDialog(
                 }
 
                 Text(
-                    text = "Soll-Menge: ${product.targetQuantity} Einheiten\nMenge pro Einheit: ${product.unit.formatAmount(product.unitAmount)}",
+                    text = "Soll-Menge: ${product.targetQuantity} Einheiten\nMenge pro Packung: ${product.unit.formatAmount(product.unitAmount)}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -61,7 +61,7 @@ fun ProductDetailDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Nährwerte (pro 100g / Einheit):",
+                    text = "Nährwerte ( pro 100g ):",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold

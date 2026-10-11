@@ -315,7 +315,7 @@ fun InventoryItemCard(
                         )
                     }
                     Text(
-                        text = "Einheit: ${product.unit.formatAmount(product.unitAmount)} | Soll: ${product.targetQuantity} Einheiten",
+                        text = "Einheit: ${product.unit.formatAmount(product.unitAmount)} | Soll: ${product.targetQuantity} Stk",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

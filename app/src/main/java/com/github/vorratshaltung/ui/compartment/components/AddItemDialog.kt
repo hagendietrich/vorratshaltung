@@ -306,7 +306,7 @@ fun AddItemDialog(
                     OutlinedTextField(
                         value = unitAmountText,
                         onValueChange = { unitAmountText = it },
-                        label = { Text("Menge pro Einheit (z.B. 1 für 1l, 1000 für 1000g)") },
+                        label = { Text("Menge pro Packung") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
