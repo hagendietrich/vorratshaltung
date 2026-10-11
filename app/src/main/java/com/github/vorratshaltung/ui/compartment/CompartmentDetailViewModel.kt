@@ -62,12 +62,10 @@ class CompartmentDetailViewModel(
         }
     }
 
-    fun decrementQuantity(itemId: Long, currentQuantity: Int, itemEntity: InventoryItemEntity) {
+    fun decrementQuantity(itemId: Long, currentQuantity: Int) {
         viewModelScope.launch {
-            if (currentQuantity > 1) {
+            if (currentQuantity > 0) {
                 repository.updateItemQuantity(itemId, -1)
-            } else {
-                repository.deleteInventoryItem(itemEntity)
             }
         }
     }

@@ -33,6 +33,9 @@ interface StorageLocationDao {
     @Query("SELECT * FROM compartments WHERE storageLocationId = :storageLocationId ORDER BY rowIndex ASC, columnIndex ASC")
     fun getCompartmentsForStorage(storageLocationId: Long): Flow<List<CompartmentEntity>>
 
+    @Query("SELECT * FROM compartments")
+    fun getAllCompartments(): Flow<List<CompartmentEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCompartments(compartments: List<CompartmentEntity>): List<Long>
 }

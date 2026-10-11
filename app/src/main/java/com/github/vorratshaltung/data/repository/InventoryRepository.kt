@@ -16,6 +16,7 @@ class InventoryRepository(
     private val inventoryItemDao: InventoryItemDao
 ) {
     val allStorageLocations: Flow<List<StorageLocationEntity>> = storageLocationDao.getAllStorageLocations()
+    val allCompartments: Flow<List<CompartmentEntity>> = storageLocationDao.getAllCompartments()
 
     fun getStorageLocation(id: Long): Flow<StorageLocationEntity?> = storageLocationDao.getStorageLocationById(id)
 

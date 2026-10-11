@@ -5,21 +5,31 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -35,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,8 +66,13 @@ fun AddItemDialog(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
 
-    var selectedProduct by remember { mutableStateOf<ProductEntity?>(allProducts.firstOrNull()) }
-    var expandedProductDropdown by remember { mutableStateOf(false) }
+    var selectedProduct by remember { mutableStateOf<ProductEntity?>(null) }
+    var productSearchQuery by remember { mutableStateOf("") }
+
+    val filteredProducts = remember(allProducts, productSearchQuery) {
+        if (productSearchQuery.isBlank()) allProducts
+        else allProducts.filter { it.name.contains(productSearchQuery, ignoreCase = true) }
+    }
 
     var newName by remember { mutableStateOf("") }
     var newTargetQtyText by remember { mutableStateOf("1") }
@@ -102,33 +118,74 @@ fun AddItemDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (selectedTab == 0) {
-                    ExposedDropdownMenuBox(
-                        expanded = expandedProductDropdown,
-                        onExpandedChange = { expandedProductDropdown = !expandedProductDropdown }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedProduct?.name ?: "Bitte Produkt wählen",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Produkt") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedProductDropdown) },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth()
-                        )
+                    OutlinedTextField(
+                        value = productSearchQuery,
+                        onValueChange = { productSearchQuery = it },
+                        label = { Text("Produkt suchen...") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                        ExposedDropdownMenu(
-                            expanded = expandedProductDropdown,
-                            onDismissRequest = { expandedProductDropdown = false }
-                        ) {
-                            allProducts.forEach { product ->
-                                DropdownMenuItem(
-                                    text = { Text(product.name) },
-                                    onClick = {
-                                        selectedProduct = product
-                                        expandedProductDropdown = false
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (selectedProduct != null) {
+                        Text(
+                            text = "Ausgewählt: ${selectedProduct!!.name}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    ) {
+                        if (filteredProducts.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Keine Produkte gefunden", color = MaterialTheme.colorScheme.outline)
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(4.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(filteredProducts, key = { it.id }) { product ->
+                                    val isSelected = selectedProduct?.id == product.id
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { selectedProduct = product },
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (isSelected) {
+                                                MaterialTheme.colorScheme.primaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.surface
+                                            }
+                                        )
+                                    ) {
+                                        Text(
+                                            text = product.name,
+                                            modifier = Modifier.padding(12.dp),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = if (isSelected) {
+                                                MaterialTheme.colorScheme.onPrimaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface
+                                            }
+                                        )
                                     }
-                                )
+                                }
                             }
                         }
                     }
@@ -265,6 +322,7 @@ fun AddItemDialog(
             }
         },
         confirmButton = {
+            val canConfirm = selectedTab == 1 || selectedProduct != null
             TextButton(
                 onClick = {
                     val qty = quantityText.toIntOrNull() ?: 1
@@ -281,7 +339,8 @@ fun AddItemDialog(
                         }
                     }
                     onDismiss()
-                }
+                },
+                enabled = canConfirm
             ) {
                 Text("Hinzufügen")
             }

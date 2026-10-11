@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -122,6 +123,9 @@ fun CompartmentDetailScreen(
                     val product = model.product
                     val item = model.inventoryItem
 
+                    val isZero = item.quantity == 0
+                    val cardAlpha = if (isZero) 0.55f else 1f
+
                     val today = LocalDate.now()
                     val mhdStatusColor = when {
                         item.expirationDate == null -> MaterialTheme.colorScheme.outlineVariant
@@ -131,9 +135,15 @@ fun CompartmentDetailScreen(
                     }
 
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .alpha(cardAlpha),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            containerColor = if (isZero) {
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainer
+                            }
                         )
                     ) {
                         Column(
@@ -209,15 +219,16 @@ fun CompartmentDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Ist-Menge: ${item.quantity}",
+                                    text = if (isZero) "Ist-Menge: 0 (Ausgegraut)" else "Ist-Menge: ${item.quantity}",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = if (isZero) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary
                                 )
 
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     OutlinedButton(
-                                        onClick = { viewModel.decrementQuantity(item.id, item.quantity, item) }
+                                        onClick = { viewModel.decrementQuantity(item.id, item.quantity) },
+                                        enabled = !isZero
                                     ) {
                                         Text("-")
                                     }

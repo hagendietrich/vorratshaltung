@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -25,6 +26,9 @@ import com.github.vorratshaltung.data.repository.InventoryRepository
 import com.github.vorratshaltung.ui.compartment.CompartmentDetailScreen
 import com.github.vorratshaltung.ui.compartment.CompartmentDetailViewModel
 import com.github.vorratshaltung.ui.compartment.CompartmentDetailViewModelFactory
+import com.github.vorratshaltung.ui.inventory.AllInventoryScreen
+import com.github.vorratshaltung.ui.inventory.AllInventoryViewModel
+import com.github.vorratshaltung.ui.inventory.AllInventoryViewModelFactory
 import com.github.vorratshaltung.ui.products.ProductCatalogScreen
 import com.github.vorratshaltung.ui.products.ProductCatalogViewModel
 import com.github.vorratshaltung.ui.products.ProductCatalogViewModelFactory
@@ -37,6 +41,7 @@ import com.github.vorratshaltung.ui.shopping.ShoppingListViewModelFactory
 
 sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Shelf : Screen("shelf", "Regale", Icons.Default.Inventory)
+    object AllItems : Screen("all_items", "Bestand", Icons.Default.Storage)
     object Shopping : Screen("shopping", "Einkaufsliste", Icons.Default.ShoppingCart)
     object Products : Screen("products", "Produkte", Icons.Default.List)
 }
@@ -47,7 +52,7 @@ fun MainNavigation(
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
-    val items = listOf(Screen.Shelf, Screen.Shopping, Screen.Products)
+    val items = listOf(Screen.Shelf, Screen.AllItems, Screen.Shopping, Screen.Products)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -55,7 +60,7 @@ fun MainNavigation(
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
 
-            if (currentRoute == Screen.Shelf.route || currentRoute == Screen.Shopping.route || currentRoute == Screen.Products.route) {
+            if (currentRoute == Screen.Shelf.route || currentRoute == Screen.AllItems.route || currentRoute == Screen.Shopping.route || currentRoute == Screen.Products.route) {
                 NavigationBar {
                     items.forEach { screen ->
                         NavigationBarItem(
@@ -92,6 +97,13 @@ fun MainNavigation(
                         navController.navigate("compartment/$compartmentId")
                     }
                 )
+            }
+
+            composable(Screen.AllItems.route) {
+                val allInventoryViewModel: AllInventoryViewModel = viewModel(
+                    factory = AllInventoryViewModelFactory(repository)
+                )
+                AllInventoryScreen(viewModel = allInventoryViewModel)
             }
 
             composable(Screen.Shopping.route) {

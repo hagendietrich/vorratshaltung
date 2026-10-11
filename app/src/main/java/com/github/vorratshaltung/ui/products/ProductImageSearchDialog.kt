@@ -18,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -47,8 +48,9 @@ fun ProductImageSearchDialog(
     var searchQuery by remember { mutableStateOf(initialQuery) }
     var results by remember { mutableStateOf<List<OpenFoodFactsProduct>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
+    var searchTrigger by remember { mutableStateOf(0) }
 
-    LaunchedEffect(searchQuery) {
+    LaunchedEffect(searchQuery, searchTrigger) {
         if (searchQuery.length >= 2) {
             isLoading = true
             delay(400) // Debounce search input
@@ -96,7 +98,15 @@ fun ProductImageSearchDialog(
                             .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(if (searchQuery.length < 2) "Bitte mindestens 2 Zeichen eingeben." else "Keine Treffer gefunden.")
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(if (searchQuery.length < 2) "Bitte mindestens 2 Zeichen eingeben." else "Keine Treffer gefunden.")
+                            if (searchQuery.length >= 2) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                OutlinedButton(onClick = { searchTrigger++ }) {
+                                    Text("Erneut versuchen")
+                                }
+                            }
+                        }
                     }
                 } else {
                     LazyVerticalGrid(

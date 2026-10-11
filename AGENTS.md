@@ -84,6 +84,6 @@ Die App soll folgende Dinge ermöglichen:
   - `+` / `-` Klicks zur direkten Mengenanpassung.
   - Langer Klick öffnet Soll-Anpassung / Editiermodus.
 
-- [ ] **Phase 4: Einkaufsliste & Produktkatalog / Nährwerte**
+- [x] **Phase 4: Einkaufsliste & Produktkatalog / Nährwerte**
   - Generierung der Einkaufsliste (`Soll > Ist`).
   - Nährwertansicht & Produktverwaltung.

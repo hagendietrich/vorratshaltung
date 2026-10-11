@@ -50,17 +50,25 @@ class ShelfViewModel(
 
                 val gridModels = compartments.map { compartment ->
                     val compartmentItems = items.filter { it.compartmentId == compartment.id }
-                    val totalCount = compartmentItems.sumOf { it.quantity }
+                    val activeItems = compartmentItems.filter { it.quantity > 0 }
+                    val totalCount = activeItems.sumOf { it.quantity }
 
-                    val summary = compartmentItems.mapNotNull { item ->
+                    val productsList = activeItems.mapNotNull { item ->
                         val p = productMap[item.productId]
-                        p?.let { "${it.name} (${item.quantity}x)" }
+                        p?.let {
+                            CompartmentProductUiModel(
+                                productId = it.id,
+                                productName = it.name,
+                                imageUrl = it.imageUrl,
+                                quantity = item.quantity
+                            )
+                        }
                     }
 
                     var expired = false
                     var expiringSoon = false
 
-                    for (item in compartmentItems) {
+                    for (item in activeItems) {
                         item.expirationDate?.let { exp ->
                             if (exp.isBefore(today)) {
                                 expired = true
@@ -73,7 +81,7 @@ class ShelfViewModel(
                     CompartmentUiModel(
                         compartment = compartment,
                         totalItemCount = totalCount,
-                        itemSummaryList = summary,
+                        products = productsList,
                         hasExpiredItems = expired,
                         hasExpiringSoonItems = expiringSoon
                     )
