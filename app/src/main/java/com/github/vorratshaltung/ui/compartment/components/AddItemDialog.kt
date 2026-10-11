@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -62,7 +63,7 @@ fun AddItemDialog(
     allProducts: List<ProductEntity>,
     onDismiss: () -> Unit,
     onAddExisting: (productId: Long, quantity: Int, expirationDate: LocalDate?) -> Unit,
-    onAddNewProduct: (name: String, targetQty: Int, unit: UnitType, quantity: Int, expirationDate: LocalDate?, imageUrl: String?, calories: Int?, protein: Float?, carbohydrates: Float?, fat: Float?) -> Unit
+    onAddNewProduct: (name: String, targetQty: Int, unit: UnitType, unitAmount: Float, quantity: Int, expirationDate: LocalDate?, imageUrl: String?, calories: Int?, protein: Float?, carbohydrates: Float?, fat: Float?) -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -76,6 +77,7 @@ fun AddItemDialog(
 
     var newName by remember { mutableStateOf("") }
     var newTargetQtyText by remember { mutableStateOf("1") }
+    var unitAmountText by remember { mutableStateOf("1") }
     var selectedUnit by remember { mutableStateOf(UnitType.STUECK) }
     var expandedUnitDropdown by remember { mutableStateOf(false) }
     var imageUrl by remember { mutableStateOf("") }
@@ -87,6 +89,7 @@ fun AddItemDialog(
     var showImageSearchDialog by remember { mutableStateOf(false) }
 
     var quantityText by remember { mutableStateOf("1") }
+    var hasExpiration by remember { mutableStateOf(true) }
     var dateText by remember { mutableStateOf(LocalDate.now().plusMonths(3).toString()) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -272,7 +275,7 @@ fun AddItemDialog(
                         onExpandedChange = { expandedUnitDropdown = !expandedUnitDropdown }
                     ) {
                         OutlinedTextField(
-                            value = selectedUnit.name,
+                            value = selectedUnit.displayLabel,
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Einheit") },
@@ -288,7 +291,7 @@ fun AddItemDialog(
                         ) {
                             UnitType.values().forEach { unit ->
                                 DropdownMenuItem(
-                                    text = { Text(unit.name) },
+                                    text = { Text(unit.displayLabel) },
                                     onClick = {
                                         selectedUnit = unit
                                         expandedUnitDropdown = false
@@ -297,6 +300,17 @@ fun AddItemDialog(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = unitAmountText,
+                        onValueChange = { unitAmountText = it },
+                        label = { Text("Menge pro Einheit (z.B. 1 für 1l, 1000 für 1000g)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -312,13 +326,30 @@ fun AddItemDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedTextField(
-                    value = dateText,
-                    onValueChange = { dateText = it },
-                    label = { Text("MHD (YYYY-MM-DD)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { hasExpiration = !hasExpiration },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Checkbox(
+                        checked = hasExpiration,
+                        onCheckedChange = { hasExpiration = it }
+                    )
+                    Text(text = "Mit MHD (Mindesthaltbarkeitsdatum)")
+                }
+
+                if (hasExpiration) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = dateText,
+                        onValueChange = { dateText = it },
+                        label = { Text("MHD (YYYY-MM-DD)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         },
         confirmButton = {
@@ -326,7 +357,7 @@ fun AddItemDialog(
             TextButton(
                 onClick = {
                     val qty = quantityText.toIntOrNull() ?: 1
-                    val date = runCatching { LocalDate.parse(dateText) }.getOrNull()
+                    val date = if (hasExpiration) runCatching { LocalDate.parse(dateText) }.getOrNull() else null
 
                     if (selectedTab == 0) {
                         selectedProduct?.let { p ->
@@ -334,8 +365,9 @@ fun AddItemDialog(
                         }
                     } else {
                         val targetQty = newTargetQtyText.toIntOrNull() ?: 1
+                        val uAmount = unitAmountText.toFloatOrNull() ?: 1f
                         if (newName.isNotBlank()) {
-                            onAddNewProduct(newName, targetQty, selectedUnit, qty, date, imageUrl.ifBlank { null }, calories, protein, carbs, fat)
+                            onAddNewProduct(newName, targetQty, selectedUnit, uAmount, qty, date, imageUrl.ifBlank { null }, calories, protein, carbs, fat)
                         }
                     }
                     onDismiss()

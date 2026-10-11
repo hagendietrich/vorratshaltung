@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.vorratshaltung.data.local.entity.ProductEntity
 import com.github.vorratshaltung.data.model.UnitType
+import com.github.vorratshaltung.data.model.formatAmount
 import com.github.vorratshaltung.ui.components.CompactTopBar
 
 @Composable
@@ -119,11 +120,11 @@ fun ProductCatalogScreen(
                     CircularProgressIndicator()
                 }
             } else {
-                val filteredProducts = state.products.filter {
-                    it.name.contains(searchQuery, ignoreCase = true)
+                val filteredItems = state.items.filter {
+                    it.product.name.contains(searchQuery, ignoreCase = true)
                 }
 
-                if (filteredProducts.isEmpty()) {
+                if (filteredItems.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -140,7 +141,8 @@ fun ProductCatalogScreen(
                             .fillMaxSize()
                             .padding(horizontal = 16.dp, vertical = 4.dp)
                     ) {
-                        items(filteredProducts, key = { it.id }) { product ->
+                        items(filteredItems, key = { it.product.id }) { item ->
+                            val product = item.product
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -190,9 +192,14 @@ fun ProductCatalogScreen(
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Text(
-                                            text = "Soll: ${product.targetQuantity} ${product.unit}",
+                                            text = "Vorhanden: ${item.availableQuantity} Stk (${product.unit.formatAmount(item.totalAvailableAmount)}) | Soll: ${product.targetQuantity} Einheiten",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = "Menge pro Einheit: ${product.unit.formatAmount(product.unitAmount)}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.outline
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         val cal = product.calories ?: 0
@@ -230,8 +237,8 @@ fun ProductCatalogScreen(
         ProductEditDialog(
             product = editingProduct,
             onDismiss = { showDialog = false },
-            onSave = { id, name, targetQty, unit, cal, prot, carbs, fat, imageUrl ->
-                viewModel.saveProduct(id, name, targetQty, unit, cal, prot, carbs, fat, imageUrl)
+            onSave = { id, name, targetQty, unit, unitAmount, cal, prot, carbs, fat, imageUrl ->
+                viewModel.saveProduct(id, name, targetQty, unit, unitAmount, cal, prot, carbs, fat, imageUrl)
                 showDialog = false
             }
         )
@@ -243,10 +250,11 @@ fun ProductCatalogScreen(
 fun ProductEditDialog(
     product: ProductEntity?,
     onDismiss: () -> Unit,
-    onSave: (id: Long, name: String, targetQty: Int, unit: UnitType, calories: Int?, protein: Float?, carbohydrates: Float?, fat: Float?, imageUrl: String?) -> Unit
+    onSave: (id: Long, name: String, targetQty: Int, unit: UnitType, unitAmount: Float, calories: Int?, protein: Float?, carbohydrates: Float?, fat: Float?, imageUrl: String?) -> Unit
 ) {
     var name by remember { mutableStateOf(product?.name ?: "") }
     var targetQtyText by remember { mutableStateOf(product?.targetQuantity?.toString() ?: "1") }
+    var unitAmountText by remember { mutableStateOf(product?.unitAmount?.toString() ?: "1") }
     var selectedUnit by remember { mutableStateOf(product?.unit ?: UnitType.STUECK) }
     var expandedUnit by remember { mutableStateOf(false) }
 
@@ -341,7 +349,7 @@ fun ProductEditDialog(
                 OutlinedTextField(
                     value = targetQtyText,
                     onValueChange = { if (it.all { char -> char.isDigit() }) targetQtyText = it },
-                    label = { Text("Soll-Anzahl") },
+                    label = { Text("Soll-Anzahl (Einheiten)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -354,7 +362,7 @@ fun ProductEditDialog(
                     onExpandedChange = { expandedUnit = !expandedUnit }
                 ) {
                     OutlinedTextField(
-                        value = selectedUnit.name,
+                        value = selectedUnit.displayLabel,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Einheit") },
@@ -370,7 +378,7 @@ fun ProductEditDialog(
                     ) {
                         UnitType.values().forEach { unit ->
                             DropdownMenuItem(
-                                text = { Text(unit.name) },
+                                text = { Text(unit.displayLabel) },
                                 onClick = {
                                     selectedUnit = unit
                                     expandedUnit = false
@@ -379,6 +387,17 @@ fun ProductEditDialog(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = unitAmountText,
+                    onValueChange = { unitAmountText = it },
+                    label = { Text("Menge pro Einheit (z.B. 1 für 1l, 1000 für 1000g)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -423,6 +442,7 @@ fun ProductEditDialog(
             TextButton(
                 onClick = {
                     val tQty = targetQtyText.toIntOrNull() ?: 1
+                    val uAmount = unitAmountText.toFloatOrNull() ?: 1f
                     val cal = calText.toIntOrNull()
                     val prot = protText.toFloatOrNull()
                     val carbs = carbsText.toFloatOrNull()
@@ -434,6 +454,7 @@ fun ProductEditDialog(
                             name,
                             tQty,
                             selectedUnit,
+                            uAmount,
                             cal,
                             prot,
                             carbs,

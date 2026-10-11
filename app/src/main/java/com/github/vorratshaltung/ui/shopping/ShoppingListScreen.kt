@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.github.vorratshaltung.data.model.formatAmount
 import com.github.vorratshaltung.ui.components.CompactTopBar
 
 @Composable
@@ -108,7 +109,7 @@ fun ShoppingListScreen(
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "Vorhanden: ${item.currentQuantity} | Soll: ${item.product.targetQuantity} ${item.product.unit}",
+                                    text = "Vorhanden: ${item.currentQuantity} Stk (${item.product.unit.formatAmount(item.currentTotalAmount)}) | Soll: ${item.product.targetQuantity} Einheiten",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

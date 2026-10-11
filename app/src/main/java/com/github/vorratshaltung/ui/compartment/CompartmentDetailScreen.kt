@@ -21,9 +21,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -49,8 +51,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.vorratshaltung.data.local.entity.InventoryItemEntity
+import com.github.vorratshaltung.data.local.entity.ProductEntity
+import com.github.vorratshaltung.data.model.formatAmount
 import com.github.vorratshaltung.ui.compartment.components.AddItemDialog
 import com.github.vorratshaltung.ui.components.CompactTopBar
+import com.github.vorratshaltung.ui.components.ProductDetailDialog
 import java.time.LocalDate
 
 @Composable
@@ -62,6 +67,7 @@ fun CompartmentDetailScreen(
     val state by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var editingItemForMhd by remember { mutableStateOf<InventoryItemEntity?>(null) }
+    var viewingProductDetails by remember { mutableStateOf<ProductEntity?>(null) }
 
     val compartmentLabel = state.compartment?.let {
         it.label ?: "Fach ${it.rowIndex + 1}-${it.columnIndex + 1}"
@@ -156,17 +162,31 @@ fun CompartmentDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                val imageModifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .clickable { viewingProductDetails = product }
+
                                 if (!product.imageUrl.isNullOrBlank()) {
                                     AsyncImage(
                                         model = product.imageUrl,
                                         contentDescription = product.name,
-                                        modifier = Modifier
-                                            .size(48.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                                        modifier = imageModifier
                                     )
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                } else {
+                                    Box(
+                                        modifier = imageModifier,
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Image,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.outline
+                                        )
+                                    }
                                 }
+                                Spacer(modifier = Modifier.width(12.dp))
 
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
@@ -176,7 +196,7 @@ fun CompartmentDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = "Einheit: ${product.unit} | Soll: ${product.targetQuantity}",
+                                        text = "Einheit: ${product.unit.formatAmount(product.unitAmount)} | Soll: ${product.targetQuantity} Einheiten",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -253,8 +273,8 @@ fun CompartmentDetailScreen(
             onAddExisting = { productId, qty, date ->
                 viewModel.addProductToCompartment(productId, qty, date)
             },
-            onAddNewProduct = { name, targetQty, unit, qty, date, imgUrl, cal, prot, carbs, fat ->
-                viewModel.createAndAddProduct(name, targetQty, unit, qty, date, imgUrl, cal, prot, carbs, fat)
+            onAddNewProduct = { name, targetQty, unit, unitAmount, qty, date, imgUrl, cal, prot, carbs, fat ->
+                viewModel.createAndAddProduct(name, targetQty, unit, unitAmount, qty, date, imgUrl, cal, prot, carbs, fat)
             }
         )
     }
@@ -269,6 +289,14 @@ fun CompartmentDetailScreen(
             }
         )
     }
+
+    val productToView = viewingProductDetails
+    if (productToView != null) {
+        ProductDetailDialog(
+            product = productToView,
+            onDismiss = { viewingProductDetails = null }
+        )
+    }
 }
 
 @Composable
@@ -277,6 +305,7 @@ fun EditExpirationDialog(
     onDismiss: () -> Unit,
     onSave: (LocalDate?) -> Unit
 ) {
+    var hasExpiration by remember { mutableStateOf(currentDate != null) }
     var dateText by remember { mutableStateOf(currentDate?.toString() ?: LocalDate.now().plusMonths(3).toString()) }
 
     AlertDialog(
@@ -284,19 +313,36 @@ fun EditExpirationDialog(
         title = { Text("MHD bearbeiten") },
         text = {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                OutlinedTextField(
-                    value = dateText,
-                    onValueChange = { dateText = it },
-                    label = { Text("MHD (YYYY-MM-DD)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { hasExpiration = !hasExpiration },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Checkbox(
+                        checked = hasExpiration,
+                        onCheckedChange = { hasExpiration = it }
+                    )
+                    Text(text = "Mit MHD (Mindesthaltbarkeitsdatum)")
+                }
+
+                if (hasExpiration) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = dateText,
+                        onValueChange = { dateText = it },
+                        label = { Text("MHD (YYYY-MM-DD)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    val parsedDate = runCatching { LocalDate.parse(dateText) }.getOrNull()
+                    val parsedDate = if (hasExpiration) runCatching { LocalDate.parse(dateText) }.getOrNull() else null
                     onSave(parsedDate)
                     onDismiss()
                 }

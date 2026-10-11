@@ -9,12 +9,17 @@ import com.github.vorratshaltung.data.repository.InventoryRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+data class ProductCatalogItemModel(
+    val product: ProductEntity,
+    val availableQuantity: Int,
+    val totalAvailableAmount: Float
+)
+
 data class ProductCatalogUiState(
-    val products: List<ProductEntity> = emptyList(),
+    val items: List<ProductCatalogItemModel> = emptyList(),
     val isLoading: Boolean = true
 )
 
@@ -24,9 +29,18 @@ class ProductCatalogViewModel(
 
     val uiState: StateFlow<ProductCatalogUiState> = combine(
         repository.allProducts,
-        flowOf(false)
-    ) { products, _ ->
-        ProductCatalogUiState(products = products, isLoading = false)
+        repository.allInventoryItems
+    ) { products, items ->
+        val itemQtyMap = items.groupingBy { it.productId }.fold(0) { acc, item -> acc + item.quantity }
+        val catalogItems = products.map { product ->
+            val availQty = itemQtyMap[product.id] ?: 0
+            ProductCatalogItemModel(
+                product = product,
+                availableQuantity = availQty,
+                totalAvailableAmount = availQty * product.unitAmount
+            )
+        }
+        ProductCatalogUiState(items = catalogItems, isLoading = false)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -38,6 +52,7 @@ class ProductCatalogViewModel(
         name: String,
         targetQuantity: Int,
         unit: UnitType,
+        unitAmount: Float,
         calories: Int?,
         protein: Float?,
         carbohydrates: Float?,
@@ -51,6 +66,7 @@ class ProductCatalogViewModel(
                         name = name,
                         targetQuantity = targetQuantity,
                         unit = unit,
+                        unitAmount = unitAmount,
                         calories = calories,
                         protein = protein,
                         carbohydrates = carbohydrates,
@@ -65,6 +81,7 @@ class ProductCatalogViewModel(
                         name = name,
                         targetQuantity = targetQuantity,
                         unit = unit,
+                        unitAmount = unitAmount,
                         calories = calories,
                         protein = protein,
                         carbohydrates = carbohydrates,

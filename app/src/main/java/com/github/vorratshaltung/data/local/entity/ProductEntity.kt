@@ -12,6 +12,7 @@ data class ProductEntity(
     val barcode: String? = null,
     val targetQuantity: Int = 1,
     val unit: UnitType = UnitType.STUECK,
+    val unitAmount: Float = 1f,
     val calories: Int? = null,
     val protein: Float? = null,
     val carbohydrates: Float? = null,

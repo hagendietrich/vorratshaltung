@@ -28,7 +28,7 @@ import java.time.LocalDate
         ProductEntity::class,
         InventoryItemEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -105,7 +105,8 @@ abstract class VorratshaltungDatabase : RoomDatabase() {
                     ProductEntity(
                         name = "Haltbare Milch 3,5%",
                         targetQuantity = 6,
-                        unit = UnitType.PACKUNG,
+                        unit = UnitType.LITER,
+                        unitAmount = 1f,
                         calories = 64,
                         protein = 3.4f,
                         carbohydrates = 4.8f,
@@ -117,7 +118,8 @@ abstract class VorratshaltungDatabase : RoomDatabase() {
                     ProductEntity(
                         name = "Spaghetti 500g",
                         targetQuantity = 4,
-                        unit = UnitType.PACKUNG,
+                        unit = UnitType.GRAMM,
+                        unitAmount = 500f,
                         calories = 359,
                         protein = 12.0f,
                         carbohydrates = 71.0f,
@@ -129,7 +131,8 @@ abstract class VorratshaltungDatabase : RoomDatabase() {
                     ProductEntity(
                         name = "Passierte Tomaten 500g",
                         targetQuantity = 8,
-                        unit = UnitType.PACKUNG,
+                        unit = UnitType.GRAMM,
+                        unitAmount = 500f,
                         calories = 24,
                         protein = 1.3f,
                         carbohydrates = 4.0f,

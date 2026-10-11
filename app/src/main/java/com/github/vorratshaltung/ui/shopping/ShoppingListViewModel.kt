@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.stateIn
 data class ShoppingItemUiModel(
     val product: ProductEntity,
     val currentQuantity: Int,
+    val currentTotalAmount: Float,
     val missingQuantity: Int
 )
 
@@ -38,6 +39,7 @@ class ShoppingListViewModel(
                 ShoppingItemUiModel(
                     product = product,
                     currentQuantity = currentQty,
+                    currentTotalAmount = currentQty * product.unitAmount,
                     missingQuantity = missing
                 )
             } else null
