@@ -34,6 +34,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import com.github.vorratshaltung.ui.components.MhdPicker
+import com.github.vorratshaltung.ui.components.ImageCropDialog
+import java.io.File
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -89,14 +93,42 @@ fun AddItemDialog(
     var showImageSearchDialog by remember { mutableStateOf(false) }
 
     var quantityText by remember { mutableStateOf("1") }
-    var hasExpiration by remember { mutableStateOf(true) }
-    var dateText by remember { mutableStateOf(LocalDate.now().plusMonths(3).toString()) }
+    var expirationDate by remember { mutableStateOf<LocalDate?>(LocalDate.now().plusMonths(3)) }
+
+    val context = LocalContext.current
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var imageToCropUri by remember { mutableStateOf<Uri?>(null) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            tempCameraUri?.let { uri ->
+                imageToCropUri = uri
+            }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val photoFile = File(context.cacheDir, "camera_${System.currentTimeMillis()}.jpg")
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+            tempCameraUri = uri
+            cameraLauncher.launch(uri)
+        }
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            imageUrl = uri.toString()
+            imageToCropUri = uri
         }
     }
 
@@ -246,14 +278,23 @@ fun AddItemDialog(
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Aus Galerie")
+                            Text("Galerie")
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Kamera")
                         }
 
                         OutlinedButton(
                             onClick = { showImageSearchDialog = true },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Bild suchen")
+                            Text("Suchen")
                         }
                     }
 
@@ -326,30 +367,10 @@ fun AddItemDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { hasExpiration = !hasExpiration },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Checkbox(
-                        checked = hasExpiration,
-                        onCheckedChange = { hasExpiration = it }
-                    )
-                    Text(text = "Mit MHD (Mindesthaltbarkeitsdatum)")
-                }
-
-                if (hasExpiration) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = dateText,
-                        onValueChange = { dateText = it },
-                        label = { Text("MHD (YYYY-MM-DD)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                MhdPicker(
+                    selectedDate = expirationDate,
+                    onDateChanged = { expirationDate = it }
+                )
             }
         },
         confirmButton = {
@@ -357,7 +378,7 @@ fun AddItemDialog(
             TextButton(
                 onClick = {
                     val qty = quantityText.toIntOrNull() ?: 1
-                    val date = if (hasExpiration) runCatching { LocalDate.parse(dateText) }.getOrNull() else null
+                    val date = expirationDate
 
                     if (selectedTab == 0) {
                         selectedProduct?.let { p ->
@@ -383,6 +404,17 @@ fun AddItemDialog(
             }
         }
     )
+
+    if (imageToCropUri != null) {
+        ImageCropDialog(
+            imageUri = imageToCropUri!!,
+            onDismiss = { imageToCropUri = null },
+            onCropped = { croppedUri ->
+                imageUrl = croppedUri.toString()
+                imageToCropUri = null
+            }
+        )
+    }
 
     if (showImageSearchDialog) {
         ProductImageSearchDialog(

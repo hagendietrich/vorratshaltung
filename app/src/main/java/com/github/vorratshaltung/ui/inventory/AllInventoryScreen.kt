@@ -33,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import com.github.vorratshaltung.ui.components.EditExpirationDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -205,7 +206,7 @@ fun AllInventoryScreen(
 
     val itemToEdit = editingItemForMhd
     if (itemToEdit != null) {
-        AllEditExpirationDialog(
+        EditExpirationDialog(
             currentDate = itemToEdit.expirationDate,
             onDismiss = { editingItemForMhd = null },
             onSave = { newDate ->
@@ -382,61 +383,3 @@ fun InventoryItemCard(
     }
 }
 
-@Composable
-fun AllEditExpirationDialog(
-    currentDate: LocalDate?,
-    onDismiss: () -> Unit,
-    onSave: (LocalDate?) -> Unit
-) {
-    var hasExpiration by remember { mutableStateOf(currentDate != null) }
-    var dateText by remember { mutableStateOf(currentDate?.toString() ?: LocalDate.now().plusMonths(3).toString()) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("MHD bearbeiten") },
-        text = {
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { hasExpiration = !hasExpiration },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Checkbox(
-                        checked = hasExpiration,
-                        onCheckedChange = { hasExpiration = it }
-                    )
-                    Text(text = "Mit MHD (Mindesthaltbarkeitsdatum)")
-                }
-
-                if (hasExpiration) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = dateText,
-                        onValueChange = { dateText = it },
-                        label = { Text("MHD (YYYY-MM-DD)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val parsedDate = if (hasExpiration) runCatching { LocalDate.parse(dateText) }.getOrNull() else null
-                    onSave(parsedDate)
-                    onDismiss()
-                }
-            ) {
-                Text("Speichern")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Abbrechen")
-            }
-        }
-    )
-}

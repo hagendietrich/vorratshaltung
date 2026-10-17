@@ -62,6 +62,9 @@ import com.github.vorratshaltung.data.local.entity.ProductEntity
 import com.github.vorratshaltung.data.model.UnitType
 import com.github.vorratshaltung.data.model.formatAmount
 import com.github.vorratshaltung.ui.components.CompactTopBar
+import com.github.vorratshaltung.ui.components.ImageCropDialog
+import java.io.File
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ProductCatalogScreen(
@@ -267,11 +270,40 @@ fun ProductEditDialog(
 
     var showImageSearchDialog by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var imageToCropUri by remember { mutableStateOf<Uri?>(null) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            tempCameraUri?.let { uri ->
+                imageToCropUri = uri
+            }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val photoFile = File(context.cacheDir, "camera_${System.currentTimeMillis()}.jpg")
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+            tempCameraUri = uri
+            cameraLauncher.launch(uri)
+        }
+    }
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            imageUrl = uri.toString()
+            imageToCropUri = uri
         }
     }
 
@@ -333,14 +365,23 @@ fun ProductEditDialog(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Aus Galerie")
+                        Text("Galerie")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Kamera")
                     }
 
                     OutlinedButton(
                         onClick = { showImageSearchDialog = true },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Bild suchen")
+                        Text("Suchen")
                     }
                 }
 
@@ -473,6 +514,17 @@ fun ProductEditDialog(
             }
         }
     )
+
+    if (imageToCropUri != null) {
+        ImageCropDialog(
+            imageUri = imageToCropUri!!,
+            onDismiss = { imageToCropUri = null },
+            onCropped = { croppedUri ->
+                imageUrl = croppedUri.toString()
+                imageToCropUri = null
+            }
+        )
+    }
 
     if (showImageSearchDialog) {
         ProductImageSearchDialog(

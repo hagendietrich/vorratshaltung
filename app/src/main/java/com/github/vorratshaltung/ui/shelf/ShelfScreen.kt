@@ -1,16 +1,18 @@
 package com.github.vorratshaltung.ui.shelf
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,7 +40,6 @@ fun ShelfScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsState()
-    var showDropdown by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -69,42 +70,37 @@ fun ShelfScreen(
                     CircularProgressIndicator()
                 }
             } else {
-                Box(
+                LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = { showDropdown = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = state.selectedLocation?.name ?: "Kein Lagerort gewählt",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Lagerort wechseln")
-                    }
-
-                    DropdownMenu(
-                        expanded = showDropdown,
-                        onDismissRequest = { showDropdown = false },
-                        modifier = Modifier.fillMaxWidth(0.9f)
-                    ) {
-                        state.allLocations.forEach { location ->
-                            DropdownMenuItem(
-                                text = { 
-                                    Text(
-                                        text = "${location.name} (${location.rows}×${location.columns})",
-                                        fontWeight = if (location.id == state.selectedLocation?.id) FontWeight.Bold else FontWeight.Normal
-                                    ) 
-                                },
-                                onClick = {
-                                    viewModel.selectLocation(location.id)
-                                    showDropdown = false
-                                }
-                            )
+                    items(state.allLocations, key = { it.id }) { location ->
+                        val isSelected = location.id == state.selectedLocation?.id
+                        if (isSelected) {
+                            Button(
+                                onClick = { viewModel.selectLocation(location.id) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
+                                Text(
+                                    text = location.name,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { viewModel.selectLocation(location.id) }
+                            ) {
+                                Text(
+                                    text = location.name,
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
                         }
                     }
                 }
