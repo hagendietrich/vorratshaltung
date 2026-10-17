@@ -30,7 +30,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.vorratshaltung.data.model.formatAmount
-import com.github.vorratshaltung.ui.components.CompactTopBar
 
 @Composable
 fun ShoppingListScreen(
@@ -40,25 +39,26 @@ fun ShoppingListScreen(
     val state by viewModel.uiState.collectAsState()
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            CompactTopBar(title = "Einkaufsliste")
-        }
+        modifier = modifier.fillMaxSize()
     ) { innerPadding ->
+        val contentPadding = Modifier
+            .fillMaxSize()
+            .padding(
+                top = 0.dp,
+                bottom = innerPadding.calculateBottomPadding()
+            )
+            .padding(horizontal = 16.dp)
+
         if (state.isLoading) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier = contentPadding,
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
         } else if (state.shoppingItems.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier = contentPadding,
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -69,10 +69,7 @@ fun ShoppingListScreen(
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp)
+                modifier = contentPadding
             ) {
                 items(state.shoppingItems, key = { it.product.id }) { item ->
                     Card(

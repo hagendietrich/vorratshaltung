@@ -29,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.github.vorratshaltung.ui.components.CompactTopBar
 import com.github.vorratshaltung.ui.shelf.components.AddStorageDialog
 import com.github.vorratshaltung.ui.shelf.components.ShelfGrid
 
@@ -44,9 +43,6 @@ fun ShelfScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            CompactTopBar(title = "Vorratshaltung")
-        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
@@ -60,7 +56,10 @@ fun ShelfScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(
+                    top = 0.dp,
+                    bottom = innerPadding.calculateBottomPadding()
+                )
         ) {
             if (state.isLoading) {
                 Box(

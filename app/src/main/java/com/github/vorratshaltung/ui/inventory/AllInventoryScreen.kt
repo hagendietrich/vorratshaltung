@@ -57,7 +57,6 @@ import coil.compose.AsyncImage
 import com.github.vorratshaltung.data.local.entity.InventoryItemEntity
 import com.github.vorratshaltung.data.local.entity.ProductEntity
 import com.github.vorratshaltung.data.model.formatAmount
-import com.github.vorratshaltung.ui.components.CompactTopBar
 import com.github.vorratshaltung.ui.components.ProductDetailDialog
 import java.time.LocalDate
 
@@ -71,15 +70,15 @@ fun AllInventoryScreen(
     var viewingProductDetails by remember { mutableStateOf<ProductEntity?>(null) }
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            CompactTopBar(title = "Bestand")
-        }
+        modifier = modifier.fillMaxSize()
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(
+                    top = 0.dp,
+                    bottom = innerPadding.calculateBottomPadding()
+                )
         ) {
             // Search field
             OutlinedTextField(

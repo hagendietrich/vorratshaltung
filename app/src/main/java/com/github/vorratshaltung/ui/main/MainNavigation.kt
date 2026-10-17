@@ -3,6 +3,7 @@ package com.github.vorratshaltung.ui.main
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -15,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,12 +40,16 @@ import com.github.vorratshaltung.ui.shelf.ShelfViewModelFactory
 import com.github.vorratshaltung.ui.shopping.ShoppingListScreen
 import com.github.vorratshaltung.ui.shopping.ShoppingListViewModel
 import com.github.vorratshaltung.ui.shopping.ShoppingListViewModelFactory
+import com.github.vorratshaltung.ui.statistics.StatisticsScreen
+import com.github.vorratshaltung.ui.statistics.StatisticsViewModel
+import com.github.vorratshaltung.ui.statistics.StatisticsViewModelFactory
 
 sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Shelf : Screen("shelf", "Regale", Icons.Default.Inventory)
     object AllItems : Screen("all_items", "Bestand", Icons.Default.Storage)
     object Shopping : Screen("shopping", "Einkaufsliste", Icons.Default.ShoppingCart)
     object Products : Screen("products", "Produkte", Icons.Default.List)
+    object Statistics : Screen("statistics", "Statistik", Icons.Default.Assessment)
 }
 
 @Composable
@@ -52,7 +58,7 @@ fun MainNavigation(
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
-    val items = listOf(Screen.Shelf, Screen.AllItems, Screen.Shopping, Screen.Products)
+    val items = listOf(Screen.Shelf, Screen.AllItems, Screen.Shopping, Screen.Products, Screen.Statistics)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -60,7 +66,7 @@ fun MainNavigation(
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
 
-            if (currentRoute == Screen.Shelf.route || currentRoute == Screen.AllItems.route || currentRoute == Screen.Shopping.route || currentRoute == Screen.Products.route) {
+            if (currentRoute == Screen.Shelf.route || currentRoute == Screen.AllItems.route || currentRoute == Screen.Shopping.route || currentRoute == Screen.Products.route || currentRoute == Screen.Statistics.route) {
                 NavigationBar {
                     items.forEach { screen ->
                         NavigationBarItem(
@@ -118,6 +124,14 @@ fun MainNavigation(
                     factory = ProductCatalogViewModelFactory(repository)
                 )
                 ProductCatalogScreen(viewModel = catalogViewModel)
+            }
+
+            composable(Screen.Statistics.route) {
+                val context = LocalContext.current
+                val statisticsViewModel: StatisticsViewModel = viewModel(
+                    factory = StatisticsViewModelFactory(context.applicationContext as android.app.Application, repository)
+                )
+                StatisticsScreen(viewModel = statisticsViewModel)
             }
 
             composable(

@@ -61,7 +61,6 @@ import coil.compose.AsyncImage
 import com.github.vorratshaltung.data.local.entity.ProductEntity
 import com.github.vorratshaltung.data.model.UnitType
 import com.github.vorratshaltung.data.model.formatAmount
-import com.github.vorratshaltung.ui.components.CompactTopBar
 import com.github.vorratshaltung.ui.components.ImageCropDialog
 import java.io.File
 import androidx.compose.ui.platform.LocalContext
@@ -78,9 +77,6 @@ fun ProductCatalogScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            CompactTopBar(title = "Produktkatalog & Nährwerte")
-        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -97,7 +93,10 @@ fun ProductCatalogScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(
+                    top = 0.dp,
+                    bottom = innerPadding.calculateBottomPadding()
+                )
         ) {
             OutlinedTextField(
                 value = searchQuery,
