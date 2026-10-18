@@ -20,19 +20,27 @@ data class OpenFoodFactsProduct(
 object OpenFoodFactsClient {
     suspend fun searchProducts(query: String): List<OpenFoodFactsProduct> = withContext(Dispatchers.IO) {
         val results = mutableListOf<OpenFoodFactsProduct>()
-        val maxRetries = 3
+        val endpoints = listOf(
+            "https://de.openfoodfacts.org/api/v2/search?search_terms=%s&page_size=24",
+            "https://world.openfoodfacts.org/api/v2/search?search_terms=%s&page_size=24",
+            "https://de.openfoodfacts.org/cgi/search.pl?search_terms=%s&search_simple=1&action=process&json=1&page_size=24",
+            "https://world.openfoodfacts.org/cgi/search.pl?search_terms=%s&search_simple=1&action=process&json=1&page_size=24"
+        )
+        val maxAttempts = 6
         var attempt = 0
-        while (attempt < maxRetries && results.isEmpty()) {
+        while (attempt < maxAttempts && results.isEmpty()) {
             attempt++
             try {
                 val encodedQuery = URLEncoder.encode(query, "UTF-8")
-                val urlString = "https://de.openfoodfacts.org/cgi/search.pl?search_terms=$encodedQuery&search_simple=1&action=process&json=1&page_size=24"
+                val endpointTemplate = endpoints[(attempt - 1) % endpoints.size]
+                val urlString = endpointTemplate.format(encodedQuery)
                 Log.d("OpenFoodFacts", "Querying URL (attempt $attempt): $urlString")
 
                 val url = URL(urlString)
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
-                connection.setRequestProperty("User-Agent", "VorratshaltungApp - Android - Version 1.0 (Contact: info@vorratshaltung.app)")
+                connection.setRequestProperty("User-Agent", "VorratshaltungApp/1.0 (Android; Contact: info@vorratshaltung.app)")
+                connection.setRequestProperty("Accept", "application/json")
                 connection.connectTimeout = 10000
                 connection.readTimeout = 10000
 
@@ -62,9 +70,16 @@ object OpenFoodFactsClient {
                             val nutriments = p.optJSONObject("nutriments")
                             val kcal = nutriments?.optDouble("energy-kcal_100g", 0.0)?.toInt()?.takeIf { it > 0 }
                                 ?: nutriments?.optDouble("energy-kcal", 0.0)?.toInt()?.takeIf { it > 0 }
+                                ?: nutriments?.optDouble("energy-kcal_value", 0.0)?.toInt()?.takeIf { it > 0 }
+
                             val protein = nutriments?.optDouble("proteins_100g", 0.0)?.toFloat()?.takeIf { it > 0f }
+                                ?: nutriments?.optDouble("proteins", 0.0)?.toFloat()?.takeIf { it > 0f }
+
                             val carbs = nutriments?.optDouble("carbohydrates_100g", 0.0)?.toFloat()?.takeIf { it > 0f }
+                                ?: nutriments?.optDouble("carbohydrates", 0.0)?.toFloat()?.takeIf { it > 0f }
+
                             val fat = nutriments?.optDouble("fat_100g", 0.0)?.toFloat()?.takeIf { it > 0f }
+                                ?: nutriments?.optDouble("fat", 0.0)?.toFloat()?.takeIf { it > 0f }
 
                             results.add(
                                 OpenFoodFactsProduct(
@@ -83,11 +98,12 @@ object OpenFoodFactsClient {
                 }
             } catch (e: Exception) {
                 Log.e("OpenFoodFacts", "Exception during search (attempt $attempt)", e)
-                if (attempt < maxRetries) {
-                    try {
-                        kotlinx.coroutines.delay(1000L * attempt)
-                    } catch (_: Exception) {}
-                }
+            }
+
+            if (results.isEmpty() && attempt < maxAttempts) {
+                try {
+                    kotlinx.coroutines.delay(500L * attempt)
+                } catch (_: Exception) {}
             }
         }
         Log.d("OpenFoodFacts", "Returning ${results.size} results")

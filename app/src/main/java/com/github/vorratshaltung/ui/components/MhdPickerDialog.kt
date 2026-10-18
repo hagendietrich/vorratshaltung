@@ -27,12 +27,24 @@ fun MhdPicker(
     selectedDate: LocalDate?,
     onDateChanged: (LocalDate?) -> Unit
 ) {
-    var hasExpiration by remember(selectedDate) { mutableStateOf(selectedDate != null) }
+    var hasExpiration by remember { mutableStateOf(selectedDate != null) }
 
-    val initialDate = selectedDate ?: LocalDate.now().plusMonths(3)
-    var year by remember(initialDate) { mutableStateOf(initialDate.year) }
-    var month by remember(initialDate) { mutableStateOf(initialDate.monthValue) }
-    var day by remember(initialDate) { mutableStateOf(initialDate.dayOfMonth) }
+    val initialDate = remember { selectedDate ?: LocalDate.now().plusMonths(3) }
+    var year by remember { mutableStateOf(initialDate.year) }
+    var month by remember { mutableStateOf(initialDate.monthValue) }
+    var day by remember { mutableStateOf(initialDate.dayOfMonth) }
+
+    LaunchedEffect(selectedDate) {
+        if (selectedDate != null) {
+            val currentDate = runCatching { LocalDate.of(year, month, day) }.getOrNull()
+            if (currentDate != selectedDate) {
+                hasExpiration = true
+                year = selectedDate.year
+                month = selectedDate.monthValue
+                day = selectedDate.dayOfMonth
+            }
+        }
+    }
 
     val maxDays = remember(year, month) {
         runCatching { YearMonth.of(year, month).lengthOfMonth() }.getOrDefault(31)

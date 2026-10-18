@@ -266,11 +266,29 @@ fun ImageCropDialog(
                             val finalW = (relW * bmp.width).toInt().coerceIn(1, bmp.width - finalX)
                             val finalH = (relH * bmp.height).toInt().coerceIn(1, bmp.height - finalY)
 
-                            val croppedBmp = Bitmap.createBitmap(bmp, finalX, finalY, finalW, finalH)
+                            var croppedBmp = Bitmap.createBitmap(bmp, finalX, finalY, finalW, finalH)
 
-                            val file = File(context.cacheDir, "cropped_${System.currentTimeMillis()}.jpg")
+                            // Downscale if image is larger than 800x800 to optimize performance & memory
+                            val maxSize = 800
+                            if (croppedBmp.width > maxSize || croppedBmp.height > maxSize) {
+                                val ratio = minOf(maxSize.toFloat() / croppedBmp.width, maxSize.toFloat() / croppedBmp.height)
+                                val targetW = (croppedBmp.width * ratio).toInt()
+                                val targetH = (croppedBmp.height * ratio).toInt()
+                                val scaledBmp = Bitmap.createScaledBitmap(croppedBmp, targetW, targetH, true)
+                                if (scaledBmp != croppedBmp) {
+                                    croppedBmp.recycle()
+                                    croppedBmp = scaledBmp
+                                }
+                            }
+
+                            // Save persistently in internal storage (filesDir) instead of temporary cacheDir
+                            val imagesDir = File(context.filesDir, "product_images")
+                            if (!imagesDir.exists()) {
+                                imagesDir.mkdirs()
+                            }
+                            val file = File(imagesDir, "product_${System.currentTimeMillis()}.jpg")
                             FileOutputStream(file).use { out ->
-                                croppedBmp.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                                croppedBmp.compress(Bitmap.CompressFormat.JPEG, 85, out)
                             }
                             val croppedUri = Uri.fromFile(file)
                             onCropped(croppedUri)
