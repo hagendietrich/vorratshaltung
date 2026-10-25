@@ -22,21 +22,17 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import com.github.vorratshaltung.ui.components.EditExpirationDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,6 +53,7 @@ import com.github.vorratshaltung.data.model.formatAmount
 import com.github.vorratshaltung.ui.compartment.components.AddItemDialog
 import com.github.vorratshaltung.ui.components.CompactTopBar
 import com.github.vorratshaltung.ui.components.ProductDetailDialog
+import com.github.vorratshaltung.ui.components.ProductEditDialog
 import java.time.LocalDate
 
 @Composable
@@ -69,6 +66,7 @@ fun CompartmentDetailScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editingItemForMhd by remember { mutableStateOf<InventoryItemEntity?>(null) }
     var viewingProductDetails by remember { mutableStateOf<ProductEntity?>(null) }
+    var editingProduct by remember { mutableStateOf<ProductEntity?>(null) }
 
     val compartmentLabel = state.compartment?.let {
         it.label ?: "Fach ${it.rowIndex + 1}-${it.columnIndex + 1}"
@@ -193,7 +191,8 @@ fun CompartmentDetailScreen(
                                     Text(
                                         text = product.name,
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.clickable { editingProduct = product }
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
@@ -223,12 +222,21 @@ fun CompartmentDetailScreen(
                                     }
                                 }
 
-                                IconButton(onClick = { viewModel.deleteItem(item) }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Löschen",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(onClick = { editingProduct = product }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Produkt bearbeiten",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    IconButton(onClick = { viewModel.deleteItem(item) }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Löschen",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
                                 }
                             }
 
@@ -298,5 +306,16 @@ fun CompartmentDetailScreen(
             onDismiss = { viewingProductDetails = null }
         )
     }
-}
 
+    val prodToEdit = editingProduct
+    if (prodToEdit != null) {
+        ProductEditDialog(
+            product = prodToEdit,
+            onDismiss = { editingProduct = null },
+            onSave = { id, name, targetQty, unit, unitAmount, cal, prot, carbs, fat, imageUrl ->
+                viewModel.updateProductDetails(id, name, targetQty, unit, unitAmount, cal, prot, carbs, fat, imageUrl)
+                editingProduct = null
+            }
+        )
+    }
+}

@@ -94,6 +94,36 @@ class CompartmentDetailViewModel(
         }
     }
 
+    fun updateProductDetails(
+        id: Long,
+        name: String,
+        targetQuantity: Int,
+        unit: com.github.vorratshaltung.data.model.UnitType,
+        unitAmount: Float,
+        calories: Int?,
+        protein: Float?,
+        carbohydrates: Float?,
+        fat: Float?,
+        imageUrl: String?
+    ) {
+        viewModelScope.launch {
+            repository.updateProduct(
+                ProductEntity(
+                    id = id,
+                    name = name,
+                    targetQuantity = targetQuantity,
+                    unit = unit,
+                    unitAmount = unitAmount,
+                    calories = calories,
+                    protein = protein,
+                    carbohydrates = carbohydrates,
+                    fat = fat,
+                    imageUrl = imageUrl
+                )
+            )
+        }
+    }
+
     fun createAndAddProduct(
         name: String,
         targetQty: Int,
